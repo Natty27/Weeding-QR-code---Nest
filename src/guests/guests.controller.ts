@@ -1,0 +1,32 @@
+import { Controller, Post, Body, Get, Param, Res } from '@nestjs/common';
+import { GuestsService } from './guests.service';
+import express from 'express';
+
+@Controller('guests')
+export class GuestsController {
+  constructor(private service: GuestsService) {}
+
+  @Post()
+  create(@Body('name') name: string) {
+    return this.service.createGuest(name);
+  }
+
+  @Get('verify/:token')
+  verify(@Param('token') token: string) {
+    return this.service.verifyGuest(token);
+  }
+
+  @Get()
+  all() {
+    return this.service.findAll();
+  }
+  @Post('bulk')
+  bulkCreate(@Body('count') count: number) {
+    return this.service.bulkCreate(count);
+  }
+
+  @Get('download/zip')
+  async downloadZip(@Res() res: express.Response): Promise<void> {
+    await this.service.downloadZip(res);
+  }
+}
