@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { randomBytes } from 'crypto';
@@ -20,18 +24,26 @@ export class GuestsService {
     return this.guestModel.create({ name, token });
   }
 
-  async verifyGuest(token: string) {
+  async verifyToken(token: string) {
     const guest = await this.guestModel.findOne({ token });
-    if (!guest) return { success: false, message: 'Invalid QR' };
 
-    if (guest.used)
-      return { success: false, message: 'QR already used', name: guest.name };
+    if (!guest) {
+      throw new UnauthorizedException('Invalid QR code');
+    }
+
+    if (guest.used) {
+      throw new ForbiddenException('QR code already used');
+    }
 
     guest.used = true;
-    guest.scanTime = new Date();
+    guest.usedAt = new Date();
     await guest.save();
 
-    return { success: true, name: guest.name };
+    return {
+      success: true,
+      name: guest.name,
+      sequence: guest.sequence,
+    };
   }
 
   async findAll() {

@@ -13,7 +13,7 @@ export class GuestsController {
 
   @Get('verify/:token')
   verify(@Param('token') token: string) {
-    return this.service.verifyGuest(token);
+    return this.service.verifyToken(token);
   }
 
   @Get()
