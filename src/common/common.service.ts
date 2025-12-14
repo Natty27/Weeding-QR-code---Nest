@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { randomBytes } from 'crypto';
@@ -20,16 +24,19 @@ export class CommonService {
     return this.commonModel.create({ name, token });
   }
 
-  async verifyCommon(token: string) {
-    const common = await this.commonModel.findOne({ token });
-    if (!common) return { success: false, message: 'Invalid QR' };
+  async verifyToken(token: string) {
+    const guest = await this.commonModel.findOne({ token });
 
-    // if (common.used)
-    //   return { success: false, message: 'QR already used', name: common.name };
+    if (!guest) {
+      throw new UnauthorizedException('Invalid QR code');
+    }
 
-    await common.save();
+    await guest.save();
 
-    return { success: true, name: common.name };
+    return {
+      success: true,
+      name: guest.name,
+    };
   }
 
   async findAll() {

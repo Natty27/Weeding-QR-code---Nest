@@ -13,7 +13,7 @@ export class CommonController {
 
   @Get('verify/:token')
   verify(@Param('token') token: string) {
-    return this.service.verifyCommon(token);
+    return this.service.verifyToken(token);
   }
 
   @Get()
