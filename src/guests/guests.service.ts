@@ -81,7 +81,7 @@ export class GuestsService {
       const number = String(g.sequence || i + 1).padStart(3, '0');
 
       const qrBuffer = await QRCode.toBuffer(
-        `http://196.190.251.148:4321/verify/${g.token}`,
+        `http://196.190.251.148:1234/guests/verify/${g.token}`,
         {
           width: 500,
           margin: 2,
