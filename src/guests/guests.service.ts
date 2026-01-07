@@ -97,4 +97,10 @@ export class GuestsService {
 
     await archive.finalize();
   }
+  async findUsedGuests() {
+    return this.guestModel
+      .find({ used: true })
+      .sort({ scanTime: 1 }) // earliest scans first
+      .lean();
+  }
 }

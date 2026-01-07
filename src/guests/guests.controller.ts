@@ -24,6 +24,10 @@ export class GuestsController {
   bulkCreate(@Body('count') count: number) {
     return this.service.bulkCreate(count);
   }
+  @Get('used')
+  getUsedGuests() {
+    return this.service.findUsedGuests();
+  }
 
   @Get('download/zip')
   async downloadZip(@Res() res: express.Response): Promise<void> {
