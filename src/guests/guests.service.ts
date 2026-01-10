@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { randomBytes } from 'crypto';
 import archiver from 'archiver';
 
@@ -102,5 +104,59 @@ export class GuestsService {
       .find({ used: true })
       .sort({ scanTime: 1 }) // earliest scans first
       .lean();
+  }
+
+  async resetGuestUsedStatus(id: string) {
+    if (!mongoose.isValidObjectId(id)) {
+      throw new BadRequestException('Invalid guest ID format');
+    }
+
+    const guest = await this.guestModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          used: false,
+          usedAt: null,
+        },
+      },
+      { new: true, lean: true },
+    );
+
+    if (!guest) {
+      throw new NotFoundException(`Guest with ID ${id} not found`);
+    }
+
+    return {
+      success: true,
+      message: 'Guest reset successfully',
+      guest: {
+        id: guest._id,
+        sequence: guest.sequence,
+        name: guest.name || 'Unnamed',
+        used: guest.used,
+      },
+    };
+  }
+
+  /**
+   * Reset ALL guests' used status to false
+   */
+  async resetAllGuestsUsedStatus() {
+    const result = await this.guestModel.updateMany(
+      { used: true }, // only update those who were used (faster)
+      {
+        $set: {
+          used: false,
+          usedAt: null,
+        },
+      },
+    );
+
+    return {
+      success: true,
+      message: 'All guests have been reset to unused',
+      resetCount: result.modifiedCount,
+      totalAffected: result.modifiedCount, // same in this case
+    };
   }
 }

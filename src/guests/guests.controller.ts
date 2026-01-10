@@ -33,4 +33,18 @@ export class GuestsController {
   async downloadZip(@Res() res: express.Response): Promise<void> {
     await this.service.downloadZip(res);
   }
+
+  @Post('reset/:id')
+  resetSingleGuest(@Param('id') id: string) {
+    return this.service.resetGuestUsedStatus(id);
+  }
+
+  /**
+   * Reset ALL guests → used: false
+   * Example: POST /guests/reset-all
+   */
+  @Post('reset-all')
+  resetAllGuests() {
+    return this.service.resetAllGuestsUsedStatus();
+  }
 }
