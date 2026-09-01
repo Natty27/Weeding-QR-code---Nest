@@ -21,43 +21,91 @@ export class GuestsService {
     return randomBytes(10).toString('hex');
   }
 
-  async createGuest(name: string) {
+  async createGuest(name: string, ticketType: string = 'Standard') {
     const token = this.generateToken();
-    return this.guestModel.create({ name, token });
+    return this.guestModel.create({ name, ticketType, token });
   }
 
-  async verifyToken(token: string) {
+  /**
+   * Read-only preview for attendees scanning their pass with a personal phone browser
+   */
+  async getPassDetails(token: string) {
     const guest = await this.guestModel.findOne({ token });
 
     if (!guest) {
-      throw new UnauthorizedException('Invalid QR code');
+      throw new NotFoundException('Invalid QR code access pass');
+    }
+
+    return {
+      success: true,
+      valid: !guest.used,
+      claimed: guest.used,
+      message: guest.used
+        ? `Pass Already Claimed & Checked In on ${guest.usedAt ? new Date(guest.usedAt).toLocaleString() : 'earlier'}`
+        : 'Pass Valid For Gate Check-In',
+      name: guest.name || `Attendee #${guest.sequence}`,
+      sequence: guest.sequence,
+      ticketType: guest.ticketType || 'Standard',
+      used: guest.used,
+      usedAt: guest.usedAt,
+      guest: {
+        name: guest.name || `Attendee #${guest.sequence}`,
+        sequence: guest.sequence,
+        ticketType: guest.ticketType || 'Standard',
+        used: guest.used,
+        usedAt: guest.usedAt,
+      },
+    };
+  }
+
+  /**
+   * Official Check-In Action performed by Event Staff / Mobile Scanner App
+   */
+  async checkInPass(token: string) {
+    const guest = await this.guestModel.findOne({ token });
+
+    if (!guest) {
+      throw new UnauthorizedException('Invalid QR code access pass');
     }
 
     if (guest.used) {
-      throw new ForbiddenException('QR code already used');
+      throw new ForbiddenException(
+        `Pass REVOKED: This pass was already scanned & claimed on ${guest.usedAt ? new Date(guest.usedAt).toLocaleString() : 'an earlier check-in'}.`
+      );
     }
 
     guest.used = true;
     guest.usedAt = new Date();
+    guest.scanTime = new Date();
     await guest.save();
 
     return {
       success: true,
-      name: guest.name,
+      message: 'Access pass checked-in successfully',
+      guest: {
+        name: guest.name || `Attendee #${guest.sequence}`,
+        sequence: guest.sequence,
+        ticketType: guest.ticketType || 'Standard',
+        usedAt: guest.usedAt,
+      },
+      name: guest.name || `Attendee #${guest.sequence}`,
       sequence: guest.sequence,
+      ticketType: guest.ticketType || 'Standard',
     };
   }
 
   async findAll() {
-    return this.guestModel.find();
+    return this.guestModel.find().sort({ sequence: 1 });
   }
-  async bulkCreate(count: number) {
-    const last = await this.guestModel.findOne().sort({ sequence: -1 }).lean();
+
+  async bulkCreate(count: number, ticketType: string = 'Standard') {
+    const last: any = await this.guestModel.findOne().sort({ sequence: -1 }).lean();
 
     let start = last?.sequence || 0;
 
     const guests = Array.from({ length: count }).map((_, i) => ({
       sequence: start + i + 1,
+      ticketType: ticketType || 'Standard',
       token: this.generateToken(),
     }));
 
@@ -72,7 +120,7 @@ export class GuestsService {
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="wedding_qr_codes.zip"',
+      'attachment; filename="app_launch_access_passes.zip"',
     );
 
     const archive = archiver('zip', { zlib: { level: 9 } });
@@ -80,21 +128,22 @@ export class GuestsService {
 
     for (let i = 0; i < guests.length; i++) {
       const g = guests[i];
-      const number = String(g.sequence || i + 1).padStart(3, '0');
+      const number = String(g.sequence || i + 1).padStart(4, '0');
 
+      const targetHost = process.env.HOST_IP || '192.168.0.108';
       const qrBuffer = await QRCode.toBuffer(
-        `http://196.190.251.148:1234/guests/verify/${g.token}`,
+        `http://${targetHost}:5173/guests/verify/${g.token}`,
         {
-          width: 500,
+          width: 600,
           margin: 2,
           color: {
-            dark: '#8b5e3c',
+            dark: '#0f172a',
             light: '#ffffff',
           },
         },
       );
 
-      archive.append(qrBuffer, { name: `${number}.png` });
+      archive.append(qrBuffer, { name: `Pass_${number}_${g.ticketType || 'Standard'}.png` });
     }
 
     await archive.finalize();
@@ -111,7 +160,7 @@ export class GuestsService {
       throw new BadRequestException('Invalid guest ID format');
     }
 
-    const guest = await this.guestModel.findByIdAndUpdate(
+    const guest: any = await this.guestModel.findByIdAndUpdate(
       id,
       {
         $set: {

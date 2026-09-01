@@ -43,7 +43,7 @@ export class CommonService {
     return this.commonModel.find();
   }
   async bulkCreate(count: number) {
-    const last = await this.commonModel.findOne().sort({ sequence: -1 }).lean();
+    const last: any = await this.commonModel.findOne().sort({ sequence: -1 }).lean();
 
     let start = last?.sequence || 0;
 

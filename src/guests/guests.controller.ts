@@ -7,13 +7,23 @@ export class GuestsController {
   constructor(private service: GuestsService) {}
 
   @Post()
-  create(@Body('name') name: string) {
-    return this.service.createGuest(name);
+  create(@Body('name') name: string, @Body('ticketType') ticketType: string) {
+    return this.service.createGuest(name, ticketType);
   }
 
   @Get('verify/:token')
-  verify(@Param('token') token: string) {
-    return this.service.verifyToken(token);
+  getPassDetails(@Param('token') token: string) {
+    return this.service.getPassDetails(token);
+  }
+
+  @Post('checkin/:token')
+  checkInPass(@Param('token') token: string) {
+    return this.service.checkInPass(token);
+  }
+
+  @Post('verify/:token')
+  checkInPassPost(@Param('token') token: string) {
+    return this.service.checkInPass(token);
   }
 
   @Get()
@@ -21,8 +31,8 @@ export class GuestsController {
     return this.service.findAll();
   }
   @Post('bulk')
-  bulkCreate(@Body('count') count: number) {
-    return this.service.bulkCreate(count);
+  bulkCreate(@Body('count') count: number, @Body('ticketType') ticketType: string) {
+    return this.service.bulkCreate(count, ticketType);
   }
   @Get('used')
   getUsedGuests() {
