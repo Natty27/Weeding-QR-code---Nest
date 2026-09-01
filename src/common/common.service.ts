@@ -73,8 +73,10 @@ export class CommonService {
       const g = commons[i];
       const number = String(g.sequence || i + 1).padStart(3, '0');
 
+      const targetHost = process.env.HOST_IP || 'localhost';
+      const frontendPort = process.env.FRONTEND_PORT || '47312';
       const qrBuffer = await QRCode.toBuffer(
-        `http://localhost:5173/verify/${g.token}`,
+        `http://${targetHost}:${frontendPort}/verify/${g.token}`,
         {
           width: 500,
           margin: 2,

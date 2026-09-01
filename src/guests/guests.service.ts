@@ -131,8 +131,9 @@ export class GuestsService {
       const number = String(g.sequence || i + 1).padStart(4, '0');
 
       const targetHost = process.env.HOST_IP || '192.168.0.108';
+      const frontendPort = process.env.FRONTEND_PORT || '47312';
       const qrBuffer = await QRCode.toBuffer(
-        `http://${targetHost}:5173/guests/verify/${g.token}`,
+        `http://${targetHost}:${frontendPort}/guests/verify/${g.token}`,
         {
           width: 600,
           margin: 2,
