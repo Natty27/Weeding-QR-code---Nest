@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GuestsModule } from './guests/guests.module';
 import { CommonModule } from './common/common.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CommonModule } from './common/common.module';
         uri: config.get<string>('MONGO_URI'),
       }),
     }),
+    AuthModule,
     GuestsModule,
     CommonModule,
   ],
