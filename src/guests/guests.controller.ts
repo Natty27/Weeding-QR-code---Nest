@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, Param, Res } from '@nestjs/common';
 import { GuestsService } from './guests.service';
+import { RegisterGuestDto } from './dto/register-guest.dto';
 import express from 'express';
 
 @Controller('guests')
@@ -14,6 +15,28 @@ export class GuestsController {
   @Get('verify/:token')
   getPassDetails(@Param('token') token: string) {
     return this.service.getPassDetails(token);
+  }
+
+  /**
+   * Attendee filled in the info page on their phone after scanning
+   * their printed pass
+   * Example: POST /guests/register/:token
+   */
+  @Post('register/:token')
+  register(@Param('token') token: string, @Body() body: RegisterGuestDto) {
+    return this.service.registerGuest(token, body);
+  }
+
+  /**
+   * Walk-up attendee with no printed pass filled in the same info page
+   * Example: POST /guests/register
+   */
+  @Post('register')
+  selfRegister(
+    @Body() body: RegisterGuestDto,
+    @Body('ticketType') ticketType: string,
+  ) {
+    return this.service.selfRegister(body, ticketType);
   }
 
   @Post('checkin/:token')
