@@ -69,7 +69,15 @@ export class GuestsService {
 
   async createGuest(name: string, ticketType: string = 'Standard') {
     const token = this.generateToken();
-    return this.guestModel.create({ name, ticketType, token });
+
+    // a single pass needs a number like a bulk one, or it shows as
+    // "Attendee #undefined" and its invitation card has no pass number
+    return this.guestModel.create({
+      name,
+      ticketType,
+      token,
+      sequence: await this.nextSequence(),
+    });
   }
 
   /**
