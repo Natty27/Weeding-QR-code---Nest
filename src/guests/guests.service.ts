@@ -278,6 +278,26 @@ export class GuestsService {
       .lean();
   }
 
+  /**
+   * How many guests have actually arrived. A guest counts once the gate
+   * verifies their pass, which is the same moment the pass is claimed.
+   *
+   * Counts only: this route is public, so it carries no guest details.
+   */
+  async getAttendance() {
+    const [attended, total] = await Promise.all([
+      this.guestModel.countDocuments({ used: true }),
+      this.guestModel.countDocuments({}),
+    ]);
+
+    return {
+      success: true,
+      attended,
+      total,
+      pending: total - attended,
+    };
+  }
+
   async resetGuestUsedStatus(id: string) {
     if (!mongoose.isValidObjectId(id)) {
       throw new BadRequestException('Invalid guest ID format');

@@ -44,6 +44,16 @@ export class GuestsController {
     return this.service.selfRegister(body, ticketType);
   }
 
+  /**
+   * Open: how many guests have arrived. Counts only, no guest details,
+   * incremented when the gate verifies a pass.
+   * Example: GET /guests/attendance
+   */
+  @Get('attendance')
+  attendance() {
+    return this.service.getAttendance();
+  }
+
   /** Open: the gate scanner app checks a pass in */
   @Post('checkin/:token')
   checkInPass(@Param('token') token: string) {
