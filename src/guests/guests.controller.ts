@@ -45,6 +45,24 @@ export class GuestsController {
   }
 
   /**
+   * Open: attending carriers, as a contact list for sales.
+   * Example: GET /guests/attended/carrier
+   */
+  @Get('attended/carrier')
+  attendedCarriers() {
+    return this.service.getAttendedByRole('Carrier');
+  }
+
+  /**
+   * Open: attending shippers, as a contact list for sales.
+   * Example: GET /guests/attended/shipper
+   */
+  @Get('attended/shipper')
+  attendedShippers() {
+    return this.service.getAttendedByRole('Shipper');
+  }
+
+  /**
    * Open: how many guests have arrived. Counts only, no guest details,
    * incremented when the gate verifies a pass.
    * Example: GET /guests/attendance

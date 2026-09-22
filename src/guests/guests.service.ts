@@ -279,6 +279,36 @@ export class GuestsService {
   }
 
   /**
+   * Attending guests of one role, as a contact list for the sales team.
+   *
+   * WARNING: the routes that expose this are public, so these names, phone
+   * numbers and companies are readable by anyone who has the URL. That is a
+   * deliberate choice by the event owner. The pass token is left out - it is
+   * the credential on the pass and has no place in a contact list.
+   */
+  async getAttendedByRole(role: string) {
+    const guests: any[] = await this.guestModel
+      .find({ used: true, role })
+      .sort({ usedAt: -1 })
+      .select('sequence name phone company ticketType usedAt')
+      .lean();
+
+    return {
+      success: true,
+      role,
+      count: guests.length,
+      guests: guests.map((guest) => ({
+        sequence: guest.sequence,
+        name: guest.name || `Attendee #${guest.sequence}`,
+        phone: guest.phone || '',
+        company: guest.company || '',
+        ticketType: guest.ticketType || 'Standard',
+        checkedInAt: guest.usedAt,
+      })),
+    };
+  }
+
+  /**
    * How many guests have actually arrived. A guest counts once the gate
    * verifies their pass, which is the same moment the pass is claimed.
    *
